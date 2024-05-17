@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+}
+
+.App {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-button {
+  width: 50%;
+  padding: 12px, 24px, 12px, 24px;
+  justify-content: start !important;
+}
+
+.full-width-dropdown {
+  width: 100%;
+}
