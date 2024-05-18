@@ -29,9 +29,6 @@ const App = () => {
     setErrors({})
   }
 
-  useEffect(()=>{
-    console.log(formData)
-  }, [formData])
   const createOrder = async () => {
     setIsLoading(true)
     const newErrors = validateForm(formData)
@@ -57,7 +54,6 @@ const App = () => {
     
     monday.api(createOrderMutation, {variables: {boardId: 6612547167, itemName: uniqueId, columnValues}})
       .then((res) => {
-        console.log(res)
         setData(res.data.create_item.id)
         setIsLoading(false)
         setIsSuccess(true)
