@@ -12,11 +12,15 @@ body {
 }
 
 .action-button {
-  width: 50%;
+  width: 50% !important;
   padding: 12px, 24px, 12px, 24px;
-  justify-content: start !important;
+  /* justify-content: start !important; */
 }
 
 .full-width-dropdown {
   width: 100%;
+}
+.error-message {
+  color: #e44258;
+  font-size: 14px;
 }

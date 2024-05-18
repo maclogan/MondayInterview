@@ -4,36 +4,38 @@ import "./App.css";
 import mondaySdk from "monday-sdk-js";
 import "monday-ui-react-core/dist/main.css";
 //Explore more Monday React Components here: https://style.monday.com/
-import {AttentionBox, Flex, TextField, Button, Dropdown} from "monday-ui-react-core";
+import {Toast, Flex, TextField, Button, Dropdown} from "monday-ui-react-core";
 import { v4 as uuidv4 } from 'uuid'
 
 // Usage of mondaySDK example, for more information visit here: https://developer.monday.com/apps/docs/introduction-to-the-sdk/
 const monday = mondaySdk();
 
+const defaultData = {
+  firstName: null, lastName: null, quantity: null, fragrances: null
+}
+
 const App = () => {
   const [dropdownData, setDropdownData] = useState([])
-  const [formData, setFormData] = useState({firstName: null, lastName: null, quantity: null, fragrances: null})
-  const [errors, setErrors] = useState({firstName: '', lastName: '', quantity: '', fragrances: ''})
+  const [formData, setFormData] = useState(defaultData)
+  const [errors, setErrors] = useState({})
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [data, setData] = useState()
+  
+  const reset = () => {
+    setIsLoading(false)
+    setIsSuccess(false)
+    setFormData(defaultData)
+    setErrors({})
+  }
 
+  useEffect(()=>{
+    console.log(formData)
+  }, [formData])
   const createOrder = async () => {
-    if (!formData || !formData.firstName || !formData.lastName || !formData.quantity || !formData.fragrances) {
-      console.log(formData)
-      console.error("All fields are required")
-      return
-    }
-    if (formData.quantity <= 0) {
-      console.error('Quantity must be at least 1')
-      return
-    }
-    if (formData.fragrances.length < 3) {
-      console.error('You must fill out at least 3 fragrances')
-      return
-    }
-    console.log(formData.fragrances.length, formData.quantity, formData.fragrances.length % formData.quantity)
-    if (formData.fragrances.length % formData.quantity !== 0) {
-      console.error('You must enter 3 fragrances per quantity entered.')
-      return
-    }
+    setIsLoading(true)
+    const newErrors = validateForm(formData)
+    setErrors(newErrors)
     const uniqueId = await uuidv4()
     const createOrderMutation = `
       mutation CreateItem($boardId:ID!, $itemName:String!, $columnValues:JSON!) {
@@ -42,45 +44,54 @@ const App = () => {
         }
       }
     `
-
+    if (Object.keys(newErrors).length > 0) {
+      setIsLoading(false)
+      return
+    }
     const fragranceIds = formData.fragrances.map(fragrance => parseInt(fragrance.value))
-    console.log(fragranceIds)
     const columnValues = JSON.stringify({
         'connect_boards7__1': {item_ids: fragranceIds},
         'numbers__1': formData.quantity,
         'text__1': `${formData.lastName}, ${formData.firstName}`
       })
     
-      console.log(columnValues)
-
     monday.api(createOrderMutation, {variables: {boardId: 6612547167, itemName: uniqueId, columnValues}})
       .then((res) => {
         console.log(res)
+        setData(res.data.create_item.id)
+        setIsLoading(false)
+        setIsSuccess(true)
       }).catch(error => {
         console.error ("Error adding new item: ", error)
+        setIsSuccess(false)
+        setIsLoading(false)
       })
   }
 
   const handleEdit = (fieldName, val) => {
-    if (val==='' || val===null || val===0 || val===undefined) {
-      setErrors({...errors, [fieldName]: 'This field is required.'})
-    }
-    else if (fieldName === 'quantity' && val < 1) {
-      setErrors({...errors, [fieldName]: 'Quantity must be at least 1.'})
-    }
-    else if (fieldName === 'fragrances' && (!val.length || val.length < 3 || val.length / 3 !== formData.quantity)) {
-      setErrors({...errors, [fieldName]: 'You must have at least 3 fragrances selected per kit.'})
-    }
-    else {
-      setErrors({...errors, [fieldName]: ''})
-    }
-    console.log(errors)
     setFormData({...formData, [fieldName]: val})
   }
 
+  const validateForm = (data) => {
+    const errors = {};
+    if (!data.firstName) {
+      errors.firstName = 'First Name is required'
+    }
+    if (!data.lastName) {
+      errors.lastName = 'Last Name is required'
+    }
+    if (!data.quantity) {
+      errors.quantity = 'Quantity is required'
+    } else if (data.quantity < 1) {
+      errors.quantity = 'Quantity must be at least 1'
+    }
+    if (!data.fragrances || data.fragrances.length < 3 || data.fragrances.length / 3 !== parseInt(data.quantity)) {
+      errors.fragrances = 'You must enter 3 fragrances per kit'
+    } 
+    return errors
+  }
+
   useEffect(() => {
-    // Notice this method notifies the monday platform that user gains a first value in an app.
-    // Read more about it here: https://developer.monday.com/apps/docs/mondayexecute#value-created-for-user/
     monday.execute("valueCreatedForUser");
     monday.setToken(process.env.REACT_APP_API_TOKEN)
     monday.api(`
@@ -97,12 +108,10 @@ const App = () => {
   `).then((res) => {
     if(res.data.boards[0] && res.data.boards[0].items_page.items) {
       const items = res.data.boards[0].items_page.items.map(item => ({label: item.name, value: item.id}))
-      console.log(items)
       setDropdownData(items)
     }
   })
   }, []);
-  //Some example what you can do with context, read more here: https://developer.monday.com/apps/docs/mondayget#requesting-context-and-settings-data
 
   return (
     <div className="App">
@@ -115,7 +124,7 @@ const App = () => {
           <TextField 
             title="First Name" 
             onChange={(val)=>handleEdit('firstName', val)} 
-            size={TextField.sizes.LARGE} 
+            size={TextField.sizes.LARGE}
             placeholder="Enter Customer First Name" 
             validation={errors.firstName ? {status: 'error', text: errors.firstName} : {status: 'none', text: ''}} />
           <TextField 
@@ -138,10 +147,18 @@ const App = () => {
           multi 
           multiline 
           options={dropdownData} cacheOptions 
-          validation={errors.fragrances ? {status: 'error', text: errors.fragrances} : {}}/>
-        <Button className='action-button' size={Button.sizes.LARGE} type={Button.types.SUBMIT}>Start Order</Button>
+        />
+        {errors.fragrances && <span className="error-message">{errors.fragrances}</span>}
+        <Button 
+          className={isLoading ? `action-button`: `action-button loading`}
+          size={Button.sizes.LARGE} 
+          type={Button.types.SUBMIT}
+          loading={isLoading}>
+            Start Order
+          </Button>
       </Flex>
       </form>
+      <Toast open={isSuccess} autoHideDuration={5000} onClose={()=>reset()} >Order {data} was successfully created!</Toast>
     </div>
   );
 };
