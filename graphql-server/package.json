@@ -1,0 +1,26 @@
+{
+  "name": "graphql-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "compile": "tsc",
+    "start": "npm run compile && node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@apollo/server": "^4.10.4",
+    "@prisma/client": "^5.14.0",
+    "dotenv": "^16.4.5",
+    "graphql": "^16.8.1",
+    "graphql-date-scalars": "^0.2.0",
+    "mongodb": "^6.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5"
+  }
+}
