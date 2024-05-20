@@ -6,6 +6,7 @@ import "monday-ui-react-core/dist/main.css";
 //Explore more Monday React Components here: https://style.monday.com/
 import {Toast, Flex, TextField, Button, Dropdown} from "monday-ui-react-core";
 import { v4 as uuidv4 } from 'uuid'
+import { gql, useLazyQuery } from "@apollo/client";
 
 // Usage of mondaySDK example, for more information visit here: https://developer.monday.com/apps/docs/introduction-to-the-sdk/
 const monday = mondaySdk();
@@ -14,6 +15,20 @@ const defaultData = {
   firstName: null, lastName: null, quantity: null, fragrances: null
 }
 
+const GET_FRAGRANCES = gql`
+        query GetFragrances {
+            listFragrances {
+                id
+                category
+                created_at
+                description
+                image_url
+                name
+                updated_at
+            }
+        }
+    `
+
 const App = () => {
   const [dropdownData, setDropdownData] = useState([])
   const [formData, setFormData] = useState(defaultData)
@@ -21,6 +36,9 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [data, setData] = useState()
+  const [dropdownPopulationMethod, setDropdownPopulationMethod] = useState({label: "Monday", value: "monday"})
+
+  const [getFragrances, {data: fragranceData}] = useLazyQuery(GET_FRAGRANCES)
   
   const reset = () => {
     setIsLoading(false)
@@ -90,24 +108,35 @@ const App = () => {
   useEffect(() => {
     monday.execute("valueCreatedForUser");
     monday.setToken(process.env.REACT_APP_API_TOKEN)
-    monday.api(`
-    query {
-      boards (ids: 6664515077) {
-        items_page {
-          items {
-            id,
-            name
+    if (dropdownPopulationMethod.value === 'monday') {
+      monday.api(`
+        query {
+          boards (ids: 6664515077) {
+            items_page {
+              items {
+                id,
+                name
+              }
+            } 
           }
-        } 
-      }
+        }
+      `).then((res) => {
+        if(res.data.boards[0] && res.data.boards[0].items_page.items) {
+          const items = res.data.boards[0].items_page.items.map(item => ({label: item.name, value: item.id}))
+          setDropdownData(items)
+        }
+      })
     }
-  `).then((res) => {
-    if(res.data.boards[0] && res.data.boards[0].items_page.items) {
-      const items = res.data.boards[0].items_page.items.map(item => ({label: item.name, value: item.id}))
-      setDropdownData(items)
+    else {
+      getFragrances().then(() => {
+        if (fragranceData) {
+          const items = fragranceData.listFragrances.map(fragrance => ({label: fragrance.name, value: fragrance.id}))
+          setDropdownData(items)
+        }
+      })
     }
-  })
-  }, []);
+  }, [dropdownPopulationMethod, getFragrances]);
+
 
   return (
     <div className="App">
@@ -151,7 +180,17 @@ const App = () => {
           type={Button.types.SUBMIT}
           loading={isLoading}>
             Start Order
-          </Button>
+        </Button>
+        <Dropdown 
+          onChange={(option)=>{setDropdownPopulationMethod(option)}} 
+          options={[
+            {label: 'Monday', value: 'monday'}, 
+            {label: 'API', value: 'api'}
+          ]}
+          size={TextField.sizes.LARGE} 
+          className='half-width-dropdown'
+          value={dropdownPopulationMethod}
+        />
       </Flex>
       </form>
       <Toast open={isSuccess} autoHideDuration={5000} onClose={()=>reset()} >Order {data} was successfully created!</Toast>

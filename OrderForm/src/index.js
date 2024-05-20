@@ -3,9 +3,19 @@ import {createRoot} from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client'
+
+const client = new ApolloClient({
+    uri: process.env.REACT_APP_GRAPHQL_URI,
+    cache: new InMemoryCache()
+})
 
 const root = createRoot(document.getElementById("root"));
-root.render(<App />);
+root.render(
+    <ApolloProvider client={client}>
+        <App />
+    </ApolloProvider>
+);
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
