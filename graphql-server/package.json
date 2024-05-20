@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "compile": "tsc",
-    "start": "npm run compile && node ./dist/index.js"
+    "start": "npm run compile && node ./dist/index.js",
+    "build": "npm install && npx prisma generate --schema=./src/prisma/schema.prisma && npm run start"
   },
   "keywords": [],
   "author": "",
