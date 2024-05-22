@@ -20,6 +20,7 @@ body {
 
 .full-width-dropdown {
   width: 100%;
+  gap: 4;
 }
 .half-width-dropdown {
   width: 50%;

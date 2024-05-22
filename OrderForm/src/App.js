@@ -144,7 +144,7 @@ const App = () => {
         e.preventDefault();
         createOrder()
       }}>
-      <Flex gap={8} align={Flex.align.START} direction={Flex.directions.COLUMN}>
+      <Flex gap={8} align={Flex.align.START} direction={Flex.directions.COLUMN} style={{width: '100%', maxWidth: 692}} >
         <Flex gap={4}>
           <TextField 
             title="First Name" 
@@ -167,11 +167,11 @@ const App = () => {
         <Dropdown 
           className='full-width-dropdown' 
           onChange={(val) => handleEdit('fragrances', val)} 
-          size={TextField.sizes.LARGE} 
+          size={"large"} 
           placeholder="Select Fragrances" 
           multi 
           multiline 
-          options={dropdownData} cacheOptions 
+          options={dropdownData}  
         />
         {errors.fragrances && <span className="error-message">{errors.fragrances}</span>}
         <Button 
