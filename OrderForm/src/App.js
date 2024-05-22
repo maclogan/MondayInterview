@@ -171,6 +171,7 @@ const App = () => {
           placeholder="Select Fragrances" 
           multi 
           multiline 
+          searchable
           options={dropdownData}  
         />
         {errors.fragrances && <span className="error-message">{errors.fragrances}</span>}
@@ -189,6 +190,7 @@ const App = () => {
           ]}
           size={TextField.sizes.LARGE} 
           className='half-width-dropdown'
+          clearable={false}
           value={dropdownPopulationMethod}
         />
       </Flex>
